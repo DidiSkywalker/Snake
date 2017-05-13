@@ -5,14 +5,10 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-import static javax.swing.JFrame.EXIT_ON_CLOSE;
-
-/**
- * Created by Corvin on 13.05.2017.
- */
 public class SnakeGame implements Runnable {
 
     private static SnakeGame instance;
@@ -27,7 +23,9 @@ public class SnakeGame implements Runnable {
 
     private boolean running, gameOver, flicker = true;
 
-    private final int width = 160, height = 160;
+    private final int WIDTH = 160, HEIGHT = 160;
+    private final int GRID_WIDTH = 16, GRID_HEIGHT = 16;
+    private final int PIXEL = 10, FPS = 60;
     private int trail = 0, ticks = 0;
     private List<Vec2> history = new ArrayList<>();
 
@@ -40,18 +38,20 @@ public class SnakeGame implements Runnable {
 
     public SnakeGame() {
         frame = new JFrame("Snake!");
-        frame.setSize(width, height);
-        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        frame.setSize(WIDTH, HEIGHT);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setAutoRequestFocus(true);
         frame.setVisible(true);
+        frame.setResizable(false);
         keyManager = new KeyManager();
         frame.addKeyListener(keyManager);
+        frame.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("snek.png")).getImage());
 
         canvas = new Canvas();
-        canvas.setPreferredSize(new Dimension(width, height));
-        canvas.setMinimumSize(new Dimension(width, height));
-        canvas.setMaximumSize(new Dimension(width, height));
+        canvas.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        canvas.setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        canvas.setMaximumSize(new Dimension(WIDTH, HEIGHT));
         canvas.setFocusable(false);
 
         frame.add(canvas);
@@ -65,16 +65,16 @@ public class SnakeGame implements Runnable {
     }
 
     private void update() {
-        if(player.x % 10 == 0 && player.y % 10 == 0) {
+        if(player.x % PIXEL == 0 && player.y % PIXEL == 0) {
             vel.set(velQueue);
 
             history.add(new Vec2(player.x, player.y));
             if(history.size() > trail) history.remove(0);
         }
         player.add(vel);
-        if(player.y < 0 || player.y > height-10 || player.x < 0 || player.x > width-10) gameOver();
+        if(player.y < 0 || player.y > HEIGHT-PIXEL || player.x < 0 || player.x > WIDTH-PIXEL) gameOver();
 
-        if(player.hits(food, 10)) {
+        if(player.hits(food)) {
             points++;
             System.out.println(points+"/"+trail);
             generateNewFood();
@@ -82,10 +82,10 @@ public class SnakeGame implements Runnable {
         }
 
         for(int i = 1; i < history.size(); i++) {
-            if(player.hits(history.get(i), 10)) gameOver();
+            if(player.hits(history.get(i))) gameOver();
         }
 
-        if(ticks % 30 == 0) {
+        if(ticks % FPS/2 == 0) {
             flicker = !flicker;
         }
 
@@ -97,7 +97,7 @@ public class SnakeGame implements Runnable {
 
     private void startGame() {
         gameOver = false;
-        player = new Vec2(width/2, height/2);
+        player = new Vec2(WIDTH/2, HEIGHT/2);
         vel = new Vec2(0, 0);
         velQueue = new Vec2(0, 0);
         history.clear();
@@ -108,7 +108,7 @@ public class SnakeGame implements Runnable {
 
     private void generateNewFood() {
         Random r = new Random();
-        food = new Vec2(r.nextInt(16)*10, r.nextInt(height/16)*10);
+        food = new Vec2(r.nextInt(GRID_WIDTH)*PIXEL, r.nextInt(GRID_HEIGHT)*PIXEL);
         for(Vec2 vec2 : history) if(food.equal(vec2)) generateNewFood();
     }
 
@@ -120,29 +120,29 @@ public class SnakeGame implements Runnable {
         }
         g = bufferStrategy.getDrawGraphics();
         // Clear
-        g.clearRect(0, 0, width, height);
+        g.clearRect(0, 0, WIDTH, HEIGHT);
 
         // Draw
         g.setColor(Color.BLACK);
-        g.fillRect(0, 0, width, height);
+        g.fillRect(0, 0, WIDTH, HEIGHT);
 
         if(!gameOver) {
             g.setColor(Color.yellow);
-            g.fillRect(player.x, player.y, 10, 10);
-            for (Vec2 v : history) g.fillRect(v.x, v.y, 10, 10);
+            g.fillRect(player.x, player.y, PIXEL, PIXEL);
+            for (Vec2 v : history) g.fillRect(v.x, v.y, PIXEL, PIXEL);
 
             g.setColor(Color.green);
-            g.fillRect(food.x, food.y, 10, 10);
+            g.fillRect(food.x, food.y, PIXEL, PIXEL);
         } else {
             g.setColor(Color.red);
             g.setFont(new Font("Arial", 0, 20));
             // Game Over = 9 = 90
-            g.drawString("Game Over", width/2-50, height/2+5);
+            g.drawString("Game Over", WIDTH/2-50, HEIGHT/2+5);
             g.setColor(Color.white);
             g.setFont(new Font("Arial", 0, 15));
-            g.drawString("Points: "+points, width/2-25, height/2+20);
+            g.drawString("Points: "+points, WIDTH/2-25, HEIGHT/2+20);
             if(flicker) {
-                g.drawString("-Space-", width/2-25, height/2+40);
+                g.drawString("-Space-", WIDTH/2-25, HEIGHT/2+40);
             }
         }
 
@@ -153,8 +153,7 @@ public class SnakeGame implements Runnable {
 
     @Override
     public void run() {
-        int fps = 60;
-        double timePerTick = 1000000000 / fps;
+        double timePerTick = 1000000000 / FPS;
         double delta = 0;
         long now;
         long lastTime = System.nanoTime();

@@ -1,8 +1,5 @@
 package de.corvin.snake;
 
-/**
- * Created by Corvin on 13.05.2017.
- */
 public class Vec2 {
 
     public int x, y;
@@ -58,7 +55,7 @@ public class Vec2 {
         return this.x == v.x && this.y == v.y;
     }
 
-    public boolean hits(Vec2 v, int width) {
+    public boolean hits(Vec2 v) {
         return (x == v.x && y == v.y);
     }
 }
