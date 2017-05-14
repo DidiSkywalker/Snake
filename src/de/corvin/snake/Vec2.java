@@ -9,6 +9,11 @@ public class Vec2 {
         this.y = y;
     }
 
+    public Vec2(Vec2 v) {
+        this.x = v.x;
+        this.y = v.y;
+    }
+
     public Vec2 add(int x, int y) {
         this.x += x;
         this.y += y;
@@ -57,5 +62,18 @@ public class Vec2 {
 
     public boolean hits(Vec2 v) {
         return (x == v.x && y == v.y);
+    }
+
+    public int len() {
+        return (int)Math.sqrt(x*x + y*y);
+    }
+
+    public Vec2 norm() {
+        Vec2 v = new Vec2(0, 0);
+        if(x > 0) v.x = 1;
+        if(x < 0) v.x = -1;
+        if(y > 0) v.y = 1;
+        if(y < 0) v.y = -1;
+        return v;
     }
 }
